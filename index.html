@@ -7,7 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { height: 100%; width: 100%; background-color: #000; overflow: hidden; font-family: 'Inter', sans-serif; }
+        /* Changed overflow: hidden to auto so you can scroll to the projects */
+        body, html { width: 100%; background-color: #000; overflow-x: hidden; overflow-y: auto; font-family: 'Inter', sans-serif; color: #fff; }
 
         .navbar {
             position: fixed; top: 0; left: 0; width: 100%; padding: 25px 5vw;
@@ -33,9 +34,28 @@
         .hero { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
         .hero-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; filter: brightness(0.6); }
         .hero-text { position: relative; z-index: 10; font-family: 'Times New Roman', Times, serif; font-size: clamp(2.5rem, 10vw, 7rem); font-weight: 400; font-style: italic; color: #FFFFFF; text-align: center; pointer-events: none; }
+
+        /* Project Section Styling */
+        #project-display {
+            padding: 80px 5vw;
+            text-align: center;
+            background-color: #000;
+        }
+        #project-display h2 {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+        .error-msg { color: #888; font-style: italic; }
     </style>
 </head>
 <body>
+
     <nav class="navbar">
         <a href="home.html" class="nav-brand">Home</a>
         <ul class="nav-links">
@@ -58,52 +78,49 @@
         <img src="https://climapodgreenhouses.com/cdn/shop/articles/Beginners_Guide_to_Small_Hydroponic_Greenhouses.jpg?v=1734705598&width=1100" alt="Hydroponics" class="hero-img">
         <h1 class="hero-text">The Royal Academy</h1>
     </main>
-<div id="display-area">Loading data from Hygraph...</div>
 
-<script>
-  // 1. Paste your High Performance URL here
-  const HYGRAPH_URL = 'https://ap-south-1.cdn.hygraph.com/content/cmnjy6z6u01fh08w8jeen94pn/master';
+    <section id="project-display">
+        <p>Loading projects...</p>
+    </section>
 
-  async function getMyLiveInfo() {
-    const query = {
-      query: `{
-        projects {
-          title
-          body {
-            text
-          }
+    <script>
+        const API_URL = 'https://ap-south-1.cdn.hygraph.com/content/cmnjy6z6u01fh08w8jeen94pn/master';
+
+        async function showMyProjects() {
+            const query = {
+                query: `{
+                    projects(stage: DRAFT) {
+                        title
+                    }
+                }`
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(query),
+                });
+
+                const result = await response.json();
+                const projects = result.data.projects;
+                const container = document.getElementById('project-display');
+                
+                if (!projects || projects.length === 0) {
+                    container.innerHTML = "<p class='error-msg'>No projects found in Hygraph.</p>";
+                } else {
+                    // Generates the titles as H2 elements
+                    container.innerHTML = projects.map(p => `<h2>${p.title}</h2>`).join('');
+                }
+
+            } catch (error) {
+                console.error("Connection Error:", error);
+                document.getElementById('project-display').innerHTML = "<p class='error-msg'>Unable to load projects at this time.</p>";
+            }
         }
-      }`
-    };
 
-    try {
-      const response = await fetch(HYGRAPH_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(query),
-      });
-
-      const result = await response.json();
-      const projects = result.data.projects;
-
-      // 2. This part clears the "Loading" text and adds your real data
-      const display = document.getElementById('display-area');
-      display.innerHTML = projects.map(p => `
-        <div style="border-bottom: 1px solid #ccc; padding: 10px;">
-          <h2>${p.title}</h2>
-          <p>${p.body ? p.body.text : ''}</p>
-        </div>
-      `).join('');
-
-    } catch (err) {
-      console.error("Oops:", err);
-      document.getElementById('display-area').innerText = "Error loading info.";
-    }
-  }
-
-  getMyLiveInfo();
-</script>
-    
+        // Initialize fetch on load
+        showMyProjects();
+    </script>
 </body>
 </html>
-
