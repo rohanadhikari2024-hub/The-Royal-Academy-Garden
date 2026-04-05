@@ -58,6 +58,52 @@
         <img src="https://climapodgreenhouses.com/cdn/shop/articles/Beginners_Guide_to_Small_Hydroponic_Greenhouses.jpg?v=1734705598&width=1100" alt="Hydroponics" class="hero-img">
         <h1 class="hero-text">The Royal Academy</h1>
     </main>
+<div id="display-area">Loading data from Hygraph...</div>
+
+<script>
+  // 1. Paste your High Performance URL here
+  const HYGRAPH_URL = 'https://ap-south-1.cdn.hygraph.com/content/cmnjy6z6u01fh08w8jeen94pn/master';
+
+  async function getMyLiveInfo() {
+    const query = {
+      query: `{
+        projects {
+          title
+          body {
+            text
+          }
+        }
+      }`
+    };
+
+    try {
+      const response = await fetch(HYGRAPH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(query),
+      });
+
+      const result = await response.json();
+      const projects = result.data.projects;
+
+      // 2. This part clears the "Loading" text and adds your real data
+      const display = document.getElementById('display-area');
+      display.innerHTML = projects.map(p => `
+        <div style="border-bottom: 1px solid #ccc; padding: 10px;">
+          <h2>${p.title}</h2>
+          <p>${p.body ? p.body.text : ''}</p>
+        </div>
+      `).join('');
+
+    } catch (err) {
+      console.error("Oops:", err);
+      document.getElementById('display-area').innerText = "Error loading info.";
+    }
+  }
+
+  getMyLiveInfo();
+</script>
+    
 </body>
 </html>
 
